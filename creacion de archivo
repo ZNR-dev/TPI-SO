@@ -1,0 +1,110 @@
+#abrir archivos xd
+import csv 
+class Nodo():
+    def __init__(self,id,arr,tam,it,proxi):
+        self.id=id
+        self.arrb=arr
+        self.tam=tam
+        self.it=it
+        self.prox=proxi
+
+    def mostrar(self):
+        print(self.id,"\n")
+        print(self.tam,"\n")
+
+
+class ListaNuevo():
+    primN:Nodo
+    tamanio:int
+
+    def __init__(self):
+        self.primN=Nodo(None,None,None,None,None)
+        self.tamanio=0
+
+    def add(self,id,arr,tam,irp):
+        q=Nodo(None,None,None,None,None)
+        p=Nodo(None,None,None,None,None)
+
+        if (self.tamanio==0):
+            self.primN.id=id
+            self.primN.arrb=arr
+            self.primN.tam=tam
+            self.primN.it=irp
+            self.primN.prox=None
+            self.tamanio= self.tamanio + 1
+        else:
+            p=self.primN
+            while (p.prox!=None):
+                p= p.prox
+            q.id=id
+            q.arr=arr
+            q.tam=tam
+            q.it=irp
+            q.prox=None
+            p.prox=q
+            p=Nodo(None,None,None,None,None)
+            self.tamanio=self.tamanio + 1
+
+    def mostrar(self):
+        p=self.primN
+        while (p.prox!=None):
+            print(p.id," ",p.arrb," ",p.tam," ",p.it)
+            p=p.prox
+        print(p.id," ",p.arrb," ",p.tam," ",p.it)
+
+
+"""class proc_memoria():
+    tam:int
+    base:int
+    limit:int
+    ant:Nodo
+    prox:Nodo
+    def __init__(self,tam,b,l,a,p):
+        self.tam=tam
+        self.base=b
+        self.limit=l
+        self.ant=a
+        self.prox=p
+
+class Memoria():
+    tam:int
+    rec:proc_memoria
+    min:int
+    max:int
+
+    def __init__(self):
+        self.tam=450
+        self.rec=(None,None,None,None,None)
+        self.min=0
+        self.max=450
+
+
+    def ingr_proc(self,tamproc):
+        if (self.tam==450):
+            self.rec.tam=tamproc
+            self.rec.base=0
+            self.rec.limit=tamproc
+            self.rec.ant=None
+            self.rec.prox=None
+            self.tam= (self.tam - tamproc)
+        else:
+            if (self.rec.ant==None):
+"""
+listN=ListaNuevo()
+
+with open("LOTE1.csv","r") as sas:  
+    lol=csv.reader(sas)
+    next(lol)
+    for linea in lol:
+        listN.add(linea[0],linea[1],linea[2],linea[3])
+
+listN.mostrar()
+
+
+
+
+
+         
+
+
+
