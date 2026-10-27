@@ -51,7 +51,7 @@ class listaenlazada():
 
 
             q=aux2
-            p=aux1 #no hace falta resetear porque despues todo se termina sobreescribiendo
+            p=aux1 #no hace falta resetear porque despues todo se termina sobreescribiendo pd: si hace falta resetear xd
             aux1=proc(None,None,None)
             aux2=proc(None,None,None)
             if (p!=None):
