@@ -9,11 +9,13 @@ def mostrar_estado(sim):
     print("Procesador:", sim.cpu if sim.cpu else "ocioso")
 
     print("\nTabla de particiones:")
-    print(f"{'Part':>4} {'Inicio':>7} {'Tamaño':>7} {'Proceso':>8} {'Frag.int':>9}")
-    print(f"{'SO':>4} {0:>6}K {TAM_SO:>6}K {'-':>8} {'-':>9}")
+    print(f"{'Part':>4} {'Inicio':>7} {'Tamaño':>7} {'Proceso':>8}")
+    print(f"{'SO':>4} {0:>6}K {TAM_SO:>6}K {'-':>8}")
     tam_procesos = {p.id: p.tam for p in sim.procesos}
     for id, base, tam, proc, frag in sim.mem.filas(tam_procesos):
-        print(f"{id:>4} {base + TAM_SO:>6}K {tam:>6}K {proc or 'libre':>8} {frag:>8}K")
+        print(f"{id:>4} {base + TAM_SO:>6}K {tam:>6}K {proc or 'libre':>8}")
+
+    print(f"\nFragmentación externa: {sim.mem.fragmentacion_externa()}K")
 
     print("\nCola de Listos:             ", sim.listos)
     print("Cola de Listos/Suspendidos: ", sim.susp)
@@ -37,3 +39,8 @@ def mostrar_informe(sim):
     print(f"\nRetorno promedio: {tot_ret / n:.2f}")
     print(f"Espera promedio:  {tot_esp / n:.2f}")
     print(f"Rendimiento: {n} trabajos / {sim.t} u.t. = {n / sim.t:.3f} trabajos por unidad de tiempo")
+
+    prom_fe = sim.fe_suma / sim.fe_muestras if sim.fe_muestras else 0
+    print("\nFragmentación externa (memoria libre no contigua):")
+    print(f"  Máxima:   {sim.fe_max:>6}K (en t={sim.fe_max_t})")
+    print(f"  Promedio: {prom_fe:>6.2f}K")
