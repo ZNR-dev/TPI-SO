@@ -58,6 +58,21 @@ class Memoria:
             ant.tam += p.tam
             ant.prox = p.prox
 
+    def fragmentacion_externa(self):
+        """Memoria libre que queda inutilizable por estar repartida en huecos
+        no contiguos: total libre menos el mayor hueco (lo único que podría
+        asignarse de una sola vez)."""
+        total = 0
+        mayor = 0
+        p = self.prim
+        while p is not None:
+            if p.proc is None:
+                total += p.tam
+                if p.tam > mayor:
+                    mayor = p.tam
+            p = p.prox
+        return total - mayor
+
     def filas(self, tam_procesos):
         """Datos para la tabla, ya por dirección: (id, inicio, tamaño, proceso, frag. interna).
         tam_procesos: dict {id_proceso: tamaño}."""
@@ -68,3 +83,4 @@ class Memoria:
             filas.append((p.id, p.base, p.tam, p.proc, frag))
             p = p.prox
         return filas
+
