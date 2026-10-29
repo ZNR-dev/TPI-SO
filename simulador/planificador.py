@@ -20,6 +20,10 @@ class Simulador:
         self.mem = Memoria()
         self.t = 0
         self.eventos = []
+        self.fe_max = 0          # mayor fragmentación externa observada
+        self.fe_max_t = 0        # instante en que se alcanzó
+        self.fe_suma = 0         # acumulado para el promedio temporal
+        self.fe_muestras = 0
 
     def en_sistema(self):
         return len(self.listos) + len(self.susp) + (1 if self.cpu else 0)
@@ -81,6 +85,15 @@ class Simulador:
                 self.eventos.append(f"terminó {self.cpu.id}")
                 self.cpu = None
 
+    def _registrar_frag_externa(self):
+        """Muestrea la fragmentación externa al final de cada instante."""
+        fe = self.mem.fragmentacion_externa()
+        self.fe_suma += fe
+        self.fe_muestras += 1
+        if fe > self.fe_max:
+            self.fe_max = fe
+            self.fe_max_t = self.t
+
     # ---- ciclo principal
     def ejecutar(self):
         total = len(self.procesos)
@@ -91,4 +104,6 @@ class Simulador:
             self._planificar_srtf()
             self._notificar()
             self._ejecutar_unidad()
+            self._registrar_frag_externa()
         self._notificar()
+
