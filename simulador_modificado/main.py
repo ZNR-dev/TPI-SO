@@ -1,21 +1,73 @@
-"""Uso: python main.py [archivo.csv]   (por defecto LOTE1.csv)"""
-import sys
+"""Punto de entrada del simulador: elige el lote CSV por nombre o con ventana"""
+import _tkinter as tk
+from tkinter import filedialog, messagebox
+
 from entrada import leer_procesos
 from planificador import Simulador
 from salida import mostrar_estado, mostrar_informe
 
-def ejecucion():
-    archivo = input("ingrese el nombre del csv que desea analizar junto con su extensión(debe estar en la misma carpeta que el codigo main.py)\n" \
-    "o ingrese la ubicación del archivo(puede arrastrar el csv dentro del shell para copiar su dirección)\n")
-    archivo= archivo.replace("\"","")
-    archivo= archivo.replace("\'","")
-    if (archivo == None):
-        archivo = "Lote1.csv"
+def seleccionar_lote():
+    """Abre el explorador de archivos y devuelve la ruta (o '' si se cancela)."""
+    ventana = tk.TK()
+    ventana.withdraw()
+    ventana.attributes("-topmost", True) #Evita que el dialogo quede detras de la consola
 
-    procesos = leer_procesos(archivo)
+    archivo = filedialog.askopenfilename(
+        parent = ventana,
+        title = "Seleccionar archivo LOTE",
+        filetypes = [("Archivos CSV", "*.csv"), ("Todos los archivos", "*.*")],
+    )
+    ventana.destroy()
+    return archivo
+
+def pedir_nombre_archivo():
+    """Pide el nombre o la ruta por consola. limpia espacios y comillas"""
+    texto = input(
+            "Ingrese el nombre del csv con su extension "
+            "(debe estar en la misma carpeta que main.py)\n"
+            "o su ubicacion completa (puede arrastrar el archivo a la consola): "
+    )
+    return texto.strip().strip("\"'")
+
+def menu_archivo():
+    """Segundo menu. Devuelva la ruta elegida, o None si el usuario vuelve atrás."""
+    while True:
+        print("\n-------Modo de seleccion de Archivo-------")
+        print("1. Escribir el nombre del archivo")
+        print("2. Seleccionar desde una carpeta (abre una ventana)")
+        print("3. Volver")
+        opcion = input("Opcion: ").strip()
+
+        if opcion == "1":
+            archivo = pedir_nombre_archivo()
+            if archivo:
+                return archivo
+            print("No escribio ningun nombre.")
+        elif opcion == "2":
+                archivo = seleccionar_lote()
+                if archivo:
+                    return archivo
+                print("Seleccion Cancelada.")
+        else:
+            print("Opcion no existe, intente de nuevo.")
+
+
+    
+def ejecucion():
+    archivo = menu_archivo()
+    if not archivo:
+        return
+
+    try:
+        procesos = leer_procesos(archivo)
+    except (OSError, UnicodeError, ValueError, IndexError) as error:
+        print(f"\n No se puede leer el archivo:{error}")
+        return
     if not procesos:
-        print("No hay procesos para simular.")
-    else:
-        sim = Simulador(procesos, al_evento=mostrar_estado)
-        sim.ejecutar()
-        mostrar_informe(sim)
+        print("El archivo no contiene procesos validos. No se ejecuto la Simulacion.")
+        return
+
+    print(f"\n Archivo Seleccionado: {archivo}")
+    sim = Simulador(procesos, al_evento=mostrar_estado)
+    sim.ejecutar()
+    mostrar_informe(sim)
