@@ -1,5 +1,5 @@
 """Punto de entrada del simulador: elige el lote CSV por nombre o con ventana"""
-import _tkinter as tk
+import tkinter as tk
 from tkinter import filedialog, messagebox
 
 from entrada import leer_procesos
