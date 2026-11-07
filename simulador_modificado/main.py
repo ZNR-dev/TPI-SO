@@ -8,7 +8,7 @@ from salida import mostrar_estado, mostrar_informe
 
 def seleccionar_lote():
     """Abre el explorador de archivos y devuelve la ruta (o '' si se cancela)."""
-    ventana = tk.TK()
+    ventana = tk.Tk()
     ventana.withdraw()
     ventana.attributes("-topmost", True) #Evita que el dialogo quede detras de la consola
 
