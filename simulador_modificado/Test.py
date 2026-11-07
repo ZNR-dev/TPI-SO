@@ -7,6 +7,9 @@ import os
 import tempfile
 import unittest
 
+import contextlib
+import io
+
 from config import MAX_EN_SISTEMA, TAM_USUARIO
 from entrada import leer_procesos
 from memoria import Memoria
@@ -153,30 +156,37 @@ class TestLecturaCSV(unittest.TestCase):
         self.assertEqual([p.id for p in ps], ["P1", "P2"])
         self.assertEqual((ps[0].arribo, ps[0].tam, ps[0].irr), (0, 100, 5))
 
-    def test_rechaza_irrupcion_cero(self):
-        with self.assertRaises(ValueError):
-            leer_procesos(self.csv(["P1,0,100,0"]))
-
-    def test_rechaza_tamano_negativo(self):
-        with self.assertRaises(ValueError):
-            leer_procesos(self.csv(["P1,0,-5,3"]))
-
-    def test_rechaza_id_duplicado(self):
-        with self.assertRaises(ValueError):
-            leer_procesos(self.csv(["P1,0,100,3", "P1,1,50,3"]))
-
-    def test_rechaza_dato_no_numerico(self):
-        with self.assertRaises(ValueError):
-            leer_procesos(self.csv(["P1,0,abc,3"]))
-
-    def test_rechaza_fila_incompleta(self):
-        with self.assertRaises(ValueError):
-            leer_procesos(self.csv(["P1,0,100"]))
+    
 
     def test_descarta_proceso_mas_grande_que_la_memoria(self):
         ps = leer_procesos(self.csv(["P1,0,999,3", "P2,0,100,3"]))
         self.assertEqual([p.id for p in ps], ["P2"])
 
+    def leer_en_silencio(self, filas):
+        """Lee el CSV sin mostrar los avisos en pantalla."""
+        with contextlib.redirect_stdout(io.StringIO()):
+            return leer_procesos(self.csv(filas))
+
+    def test_descarta_irrupcion_cero(self):
+        ps = self.leer_en_silencio(["P1,0,100,0", "P2,0,50,3"])
+        self.assertEqual([p.id for p in ps], ["P2"])
+
+    def test_descarta_tamano_negativo(self):
+        ps = self.leer_en_silencio(["P1,0,-5,3", "P2,0,50,3"])
+        self.assertEqual([p.id for p in ps], ["P2"])
+
+    def test_descarta_id_duplicado(self):
+        ps = self.leer_en_silencio(["P1,0,100,3", "P1,1,50,3"])
+        self.assertEqual(len(ps), 1)
+        self.assertEqual(ps[0].tam, 100)   # se queda con el primero
+
+    def test_descarta_dato_no_numerico(self):
+        ps = self.leer_en_silencio(["P1,0,abc,3", "P2,0,50,3"])
+        self.assertEqual([p.id for p in ps], ["P2"])
+
+    def test_descarta_fila_incompleta(self):
+        ps = self.leer_en_silencio(["P1,0,100", "P2,0,50,3"])
+        self.assertEqual([p.id for p in ps], ["P2"])
 
 if __name__ == "__main__":
     unittest.main()
