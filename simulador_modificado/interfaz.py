@@ -45,7 +45,7 @@ while (val==False):
     opc = asignar_valor()
     
   elif (opc==3):
-    exit
+    break
 
   else:   
     print("opción no existe, por favor reintente con alguna de las opciones en pantalla\n")
