@@ -159,7 +159,7 @@ class TestLecturaCSV(unittest.TestCase):
     
 
     def test_descarta_proceso_mas_grande_que_la_memoria(self):
-        ps = leer_procesos(self.csv(["P1,0,999,3", "P2,0,100,3"]))
+        ps = self.leer_en_silencio(["P1,0,999,3", "P2,0,100,3"])
         self.assertEqual([p.id for p in ps], ["P2"])
 
     def leer_en_silencio(self, filas):
