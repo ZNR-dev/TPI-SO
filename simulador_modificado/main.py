@@ -48,6 +48,9 @@ def menu_archivo():
                 if archivo:
                     return archivo
                 print("Seleccion Cancelada.")
+        elif opcion == "3":
+            return None
+    
         else:
             print("Opcion no existe, intente de nuevo.")
 
