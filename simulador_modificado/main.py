@@ -54,23 +54,22 @@ def menu_archivo():
         else:
             print("Opcion no existe, intente de nuevo.")
 
-
-    
 def ejecucion():
     archivo = menu_archivo()
     if not archivo:
         return
+    print(f"\n Archivo Seleccionado: {archivo}")
 
     try:
         procesos = leer_procesos(archivo)
     except (OSError, UnicodeError, ValueError, IndexError) as error:
         print(f"\n No se puede leer el archivo:{error}")
         return
+    
     if not procesos:
         print("El archivo no contiene procesos validos. No se ejecuto la Simulacion.")
         return
 
-    print(f"\n Archivo Seleccionado: {archivo}")
     sim = Simulador(procesos, al_evento=mostrar_estado)
     sim.ejecutar()
     mostrar_informe(sim)
