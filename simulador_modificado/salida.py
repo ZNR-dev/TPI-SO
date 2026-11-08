@@ -45,20 +45,22 @@ def _unir(textos):
  
  
 def _explicar_frag_externa(sim, bloques):
-    """Explica por qué hay fragmentación externa, con el caso concreto que la provoca.
+    """Explica por qué hay fragmentación externa y qué procesos quedan afectados.
     bloques: filas de sim.mem.filas(...). Solo se llama si la fragmentación es > 0."""
     libres = [tam for _, _, tam, proc, _ in bloques if proc is None]
     total, mayor = sum(libres), max(libres)
-    huecos = _unir([f"{h}K" for h in libres])
-    print(f"  Hay {len(libres)} particiones libres separadas ({huecos}): suman {total}K, "
-          f"pero la mayor es de {mayor}K.")
-    # Procesos suspendidos que entrarían si las libres estuvieran juntas
-    for p in sim.susp:
-        if mayor < p.tam <= total:
-            print(f"  Las particiones libres de {huecos} podrían asignarse a {p.id} "
-                  f"({p.tam}K) si estuvieran juntas, pero no lo están: {p.id} no puede entrar.")
- 
- 
+    print(f"  Particiones libres separadas: {_unir([f'{h}K' for h in libres])} "
+          f"(suman {total}K, pero la mayor es de {mayor}K).")
+    print("  No se pueden unir porque hay procesos ocupando memoria entre ellas.")
+    afectados = [f"{p.id} ({p.tam}K)" for p in sim.susp if mayor < p.tam <= total]
+
+    if len(afectados) == 1:
+        print(f" Espera aunque la suma alcanzaría: {afectados[0]}.")
+    else:
+        print(f" Esperan aunque la suma alcanzaría: {_unir(afectados)}. "
+            "Cualquiera de ellos entraría, pero no todos a la vez.")
+
+
 def mostrar_estado(sim):
     print("\n" + "=" * 60)
     print(f"Tiempo {sim.t}: " + " | ".join(sim.eventos))
