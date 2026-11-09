@@ -60,7 +60,7 @@ class Simulador:
 
     def _planificar_srtf(self):
         """Expropiativo: solo desplaza a la CPU si el candidato es estrictamente menor."""
-        mejor = self.listos.minimo(lambda p: p.rest)
+        mejor = self.listos.minimo(lambda p: (p.rest, p.arribo, p.id))
         if mejor is None:
             return
         if self.cpu is None or mejor.rest < self.cpu.rest:
@@ -93,7 +93,7 @@ class Simulador:
                 self.eventos.append(f"terminó {self.cpu.id}")
                 self.cpu = None
 
-    def _registrar_frag_externa(self):
+ def _registrar_frag_externa(self.susp):
         """Muestrea la fragmentación externa al final de cada instante."""
         fe = self.mem.fragmentacion_externa(self.susp)
         self.fe_suma += fe

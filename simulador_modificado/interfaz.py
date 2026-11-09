@@ -2,16 +2,12 @@ from main import ejecucion
 opc=0
 
 def asignar_valor():
-  flag=False
-  while (flag==False):  
+  while True:
     try:
-      x=0
-      x=int(input())
-      flag = True
-    except:
+      return int(input())
+    except ValueError:
       print("opción no existe, por favor reintente con alguna de las opciones en pantalla\n")
       opciones()
-  return x  
 
 def opciones():
   print("\n por favor, ingrese una de las opciones para continuar \n")

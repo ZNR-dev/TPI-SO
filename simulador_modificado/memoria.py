@@ -4,7 +4,11 @@ Lista simplemente enlazada ORDENADA POR DIRECCIÓN: los nodos están en el mismo
 orden físico en que están en memoria. Por eso los vecinos físicos son vecinos
 en la lista y la fusión de libres solo mira el nodo anterior y el siguiente.
 """
-from config import TAM_USUARIO
+from config import TAM_USUARIO, GRANULARIDAD
+
+
+def _tam_requerido(tam):
+    return max(GRANULARIDAD, ((tam + GRANULARIDAD - 1) // GRANULARIDAD) * GRANULARIDAD)
 
 
 class NodoMem:
@@ -24,22 +28,23 @@ class Memoria:
 
     def asignar(self, proc):
         """Best-Fit: recorre toda la lista y elige el hueco libre con menor sobrante."""
+        requerido = _tam_requerido(proc.tam)
         mejor = None
         p = self.prim
         while p is not None:
-            if p.proc is None and p.tam >= proc.tam:
+            if p.proc is None and p.tam >= requerido:
                 if mejor is None or p.tam < mejor.tam:
                     mejor = p
             p = p.prox
         if mejor is None:
             return False                                   # no hay hueco: queda suspendido
 
-        if mejor.tam > proc.tam:                           # se divide el hueco
-            resto = NodoMem(self.sig_id, mejor.base + proc.tam, mejor.tam - proc.tam)
+        if mejor.tam > requerido:                          # se divide el hueco
+            resto = NodoMem(self.sig_id, mejor.base + requerido, mejor.tam - requerido)
             self.sig_id += 1
             resto.prox = mejor.prox                        # el resto libre va justo después
             mejor.prox = resto
-            mejor.tam = proc.tam
+            mejor.tam = requerido
         mejor.proc = proc.id
         return True
 
@@ -74,7 +79,7 @@ class Memoria:
                     mayor = p.tam
             p = p.prox
         for proc in esperando:
-            if mayor < proc.tam <= total:
+            if mayor < _tam_requerido(proc.tam) <= total:
                 return total
         return 0
  
