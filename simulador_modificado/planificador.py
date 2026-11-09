@@ -56,7 +56,7 @@ class Simulador:
 
     def _planificar_srtf(self):
         """Expropiativo: solo desplaza a la CPU si el candidato es estrictamente menor."""
-        mejor = self.listos.minimo(lambda p: p.rest)
+        mejor = self.listos.minimo(lambda p: (p.rest, p.arribo, p.id))
         if mejor is None:
             return
         if self.cpu is None or mejor.rest < self.cpu.rest:
