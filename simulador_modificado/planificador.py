@@ -85,7 +85,7 @@ class Simulador:
                 self.eventos.append(f"terminó {self.cpu.id}")
                 self.cpu = None
 
- def _registrar_frag_externa(self):
+ def _registrar_frag_externa(self.susp):
         """Muestrea la fragmentación externa al final de cada instante."""
         fe = self.mem.fragmentacion_externa(self.susp)
         self.fe_suma += fe
