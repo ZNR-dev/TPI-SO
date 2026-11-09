@@ -92,7 +92,6 @@ def mostrar_estado(sim):
     _tabla("Tabla de particiones",
            ["Part", "Ocupa", "Inicio", "Tamaño", "Proceso", "Frag.Ext"], filas_mem)
 
-    print(f"\nFragmentación externa: {fe}K")
     if fe > 0:
         _explicar_frag_externa(sim, bloques)
     
