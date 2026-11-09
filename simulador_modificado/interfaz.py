@@ -8,7 +8,6 @@ def asignar_valor():
     except ValueError:
       print("opción no existe, por favor reintente con alguna de las opciones en pantalla\n")
       opciones()
-  return x  
 
 def opciones():
   print("\n por favor, ingrese una de las opciones para continuar \n")
