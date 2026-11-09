@@ -1,5 +1,13 @@
 """Presentación por consola: estado en cada evento e informe final."""
 from config import TAM_SO
+
+
+_sin_pausa = False
+
+
+def set_sin_pausa(valor):
+    global _sin_pausa
+    _sin_pausa = valor
  
  
 def _tabla(titulo, encabezados, filas, vacia="(vacía)"):
@@ -74,11 +82,11 @@ def mostrar_estado(sim):
  
     tam_procesos = {p.id: p.tam for p in sim.procesos}
     bloques = sim.mem.filas(tam_procesos)
-    filas_mem = [["SO", "0K", f"{TAM_SO}K", "-"]]
+    filas_mem = [["SO", "0K", f"{TAM_SO}K", "-", "-"]]
     for id, base, tam, proc, frag in bloques:
-        filas_mem.append([id, f"{base + TAM_SO}K", f"{tam}K", proc or "libre"])
+        filas_mem.append([id, f"{base + TAM_SO}K", f"{tam}K", proc or "libre", f"{frag}K"])
     _tabla("Tabla de particiones",
-           ["Part", "Inicio", "Tamaño", "Proceso"], filas_mem)
+           ["Part", "Inicio", "Tamaño", "Proceso", "Frag.Int"], filas_mem)
  
     fe = sim.mem.fragmentacion_externa(sim.susp)
     print(f"\nFragmentación externa: {fe}K")
@@ -91,7 +99,8 @@ def mostrar_estado(sim):
     _tabla("Cola de Listos/Suspendidos",
            ["PID", "Arribo", "Restante", "Tamaño"],
            _filas_procesos(sim.susp, restante=True))
-    input("\n[ENTER para continuar]")
+    if not _sin_pausa:
+        input("\n[ENTER para continuar]")
  
  
 def mostrar_informe(sim):
