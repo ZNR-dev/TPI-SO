@@ -82,12 +82,20 @@ def mostrar_estado(sim):
  
     tam_procesos = {p.id: p.tam for p in sim.procesos}
     bloques = sim.mem.filas(tam_procesos)
-    filas_mem = [["SO", "0K", f"{TAM_SO}K", "-", "-"]]
+    fe = sim.mem.fragmentacion_externa(sim.susp)
+
+    filas_mem = [["SO", "-", "0K", f"{TAM_SO}K", "-", "-"]]
     for id, base, tam, proc, frag in bloques:
-        filas_mem.append([id, f"{base + TAM_SO}K", f"{tam}K", proc or "libre", f"{frag}K"])
+        ocupa = f"{tam - frag}K" if proc else "-"
+        fe_txt = f"{tam}K" if (proc is None and fe > 0) else "-"
+        filas_mem.append([id, ocupa, f"{base + TAM_SO}K", f"{tam}K", proc or "libre", fe_txt])
     _tabla("Tabla de particiones",
-           ["Part", "Inicio", "Tamaño", "Proceso", "Frag.Int"], filas_mem)
- 
+           ["Part", "Ocupa", "Inicio", "Tamaño", "Proceso", "Frag.Ext"], filas_mem)
+
+    print(f"\nFragmentación externa: {fe}K")
+    if fe > 0:
+        _explicar_frag_externa(sim, bloques)
+    
     fe = sim.mem.fragmentacion_externa(sim.susp)
     print(f"\nFragmentación externa: {fe}K")
     if fe > 0:
