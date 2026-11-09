@@ -20,6 +20,7 @@ class Simulador:
         self.mem = Memoria()
         self.t = 0
         self.eventos = []
+        self.hubo_swap_in = False
         self.fe_max = 0          # mayor fragmentación externa observada
         self.fe_max_t = 0        # instante en que se alcanzó
         self.fe_suma = 0         # acumulado para el promedio temporal
@@ -43,6 +44,8 @@ class Simulador:
                 self.susp.quitar(p)
                 p.estado = "Listo"
                 self.listos.agregar(p)
+                self.hubo_swap_in = True
+                self.eventos.append(f"{p.id} pasa de listos/suspendidos a listo (entro en memoria)")
 
     def _admitir_nuevos(self):
         while not self.nuevos.vacia() and self.en_sistema() < MAX_EN_SISTEMA:
@@ -53,6 +56,7 @@ class Simulador:
             else:
                 p.estado = "Listo y Suspendido"
                 self.susp.agregar(p)
+                self.eventos.append(f"{p.id} pasa a listos/suspendido (no hay hueco en memoria)")
 
     def _planificar_srtf(self):
         """Expropiativo: solo desplaza a la CPU si el candidato es estrictamente menor."""
@@ -63,6 +67,10 @@ class Simulador:
             if self.cpu:
                 self.cpu.estado = "Listo"
                 self.listos.agregar(self.cpu)
+                self.eventos.append(f"{mejor.id} pasa a ejecucion (expropia a {self.cpu.id})")
+            else:
+                self.eventos.append(f"{mejor.id} pasa a ejecucion")
+
             self.listos.quitar(mejor)
             mejor.estado = "Ejecución"
             self.cpu = mejor
@@ -87,7 +95,7 @@ class Simulador:
 
     def _registrar_frag_externa(self):
         """Muestrea la fragmentación externa al final de cada instante."""
-        fe = self.mem.fragmentacion_externa()
+        fe = self.mem.fragmentacion_externa(self.susp)
         self.fe_suma += fe
         self.fe_muestras += 1
         if fe > self.fe_max:
@@ -101,6 +109,10 @@ class Simulador:
             self._recibir_llegadas()
             self._reanudar_suspendidos()
             self._admitir_nuevos()
+            if self.hubo_swap_in:
+                self._notificar()
+                self.hubo_swap_in = False
+                
             self._planificar_srtf()
             self._notificar()
             self._ejecutar_unidad()
