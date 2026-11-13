@@ -1,7 +1,7 @@
 """Tests automáticos del simulador.
 
 Ejecutar desde la carpeta del proyecto:
-    python -m unittest test_simulador -v
+    python -m unittest Test -v
 """
 import os
 import tempfile
@@ -48,8 +48,9 @@ class TestBestFit(unittest.TestCase):
         mem.liberar("B")   # hueco de 50K en base 100
         mem.liberar("D")   # hueco de 30K en base 350
         self.assertTrue(mem.asignar(proc("F", 25)))
-        # F debe ir al hueco de 30K (el que menos sobra), no al de 50K
-        self.assertIn((350, 25, "F"), bloques(mem))
+        # F pide 25K, que por la granularidad de 10K ocupa 30K.
+        # Debe ir al hueco de 30K (el que menos sobra), no al de 50K.
+        self.assertIn((350, 30, "F"), bloques(mem))
         self.assertIn((100, 50, None), bloques(mem))
 
     def test_sin_hueco_devuelve_false(self):
@@ -89,8 +90,19 @@ class TestFusionDeHuecos(unittest.TestCase):
     def test_huecos_separados_generan_fragmentacion_externa(self):
         mem = memoria_llena_de_5()
         mem.liberar("B")
-        mem.liberar("D")
-        self.assertEqual(mem.fragmentacion_externa(), 90)  # 180 libres - 90 mayor
+        mem.liberar("D")   # quedan dos huecos de 90K (suman 180K, el mayor es 90K)
+
+        # Sin procesos esperando no hay a quién afectar: no se reporta nada.
+        self.assertEqual(mem.fragmentacion_externa(), 0)
+
+        # 100K no entra en ningún hueco (90K), aunque la suma (180K) alcanzaría.
+        self.assertEqual(mem.fragmentacion_externa([proc("X", 100)]), 180)
+
+        # Si entra en el mayor hueco, no hay fragmentación externa.
+        self.assertEqual(mem.fragmentacion_externa([proc("Y", 90)]), 0)
+
+        # Si ni siquiera la suma alcanza, tampoco hay fragmentación externa.
+        self.assertEqual(mem.fragmentacion_externa([proc("Z", 200)]), 0)
 
 
 # ----------------------------------------------------------- PLANIFICADOR
