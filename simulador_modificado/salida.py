@@ -116,7 +116,8 @@ def mostrar_informe(sim):
     filas = []
     tot_ret = tot_esp = 0
     for p in sorted(sim.terminados, key=lambda p: p.id):
-        retorno = p.fin - p.arribo
+        base = p.arribo_efectivo if p.arribo_efectivo is not None else p.arribo
+        retorno = p.fin - base
         espera = retorno - p.irr
         tot_ret += retorno
         tot_esp += espera
