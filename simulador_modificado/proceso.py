@@ -13,4 +13,4 @@ class Proceso:
         self.arribo_efectivo = None
 
     def __str__(self):
-        return f"{self.id}(rest={self.rest})"
+        return f"{self.id}(TIr={self.rest})"

@@ -48,7 +48,7 @@ class Simulador:
                 p.estado = "Listo"
                 self.listos.agregar(p)
                 self.hubo_swap_in = True
-                self.eventos.append(f"{p.id} pasa de listos/suspendidos a listo (entro en memoria)")
+                self.eventos.append(f"{p.id} pasa de suspendido a listo (entro en memoria)")
 
     def _admitir_nuevos(self):
         while not self.nuevos.vacia() and self.en_sistema() < MAX_EN_SISTEMA:

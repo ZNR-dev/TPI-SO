@@ -1,11 +1,18 @@
 """Lectura del lote de procesos desde un archivo CSV."""
 import csv
+import textwrap
  
 from config import MAX_PROCESOS, TAM_USUARIO
 from proceso import Proceso
  
 # Nombres de las columnas numéricas, en el orden en que vienen en el CSV
 COLUMNAS = ("arribo", "tamaño", "irrupción")
+
+
+def _aviso(texto):
+    """Imprime un aviso sin pasarse del ancho de la consola."""
+    for linea in textwrap.wrap(texto, width=60, subsequent_indent="       "):
+        print(linea)
  
  
 def _leer_numeros(linea):
@@ -52,36 +59,36 @@ def leer_procesos(archivo):
                 continue
  
             if len(procesos) == MAX_PROCESOS:
-                print(f"Aviso: el lote tiene más de {MAX_PROCESOS} procesos; "
-                      f"se ignoran las líneas {n} en adelante.")
+                _aviso(f"Aviso: el lote tiene más de {MAX_PROCESOS} procesos; "
+                       f"se ignoran las líneas {n} en adelante.")
                 break
  
             id = linea[0].strip()
             if not id:
-                print(f"Aviso (línea {n}): se descarta porque no tiene identificador.")
+                _aviso(f"Aviso (línea {n}): se descarta porque no tiene identificador.")
                 continue
  
             if id in linea_de_id:
-                print(f"Aviso (línea {n}): se descarta {id} porque ese ID ya apareció "
-                      f"en la línea {linea_de_id[id]} y debe ser único.")
+                _aviso(f"Aviso (línea {n}): se descarta {id} porque ese ID ya apareció "
+                       f"en la línea {linea_de_id[id]} y debe ser único.")
                 continue
  
             valores, motivos = _leer_numeros(linea)
             if motivos:
-                print(f"Aviso (línea {n}): se descarta {id} porque "
-                      + "; ".join(motivos) + ".")
+                _aviso(f"Aviso (línea {n}): se descarta {id} porque "
+                       + "; ".join(motivos) + ".")
                 continue
  
             arr, tam, irr = valores
             motivos = _motivos_de_rango(arr, tam, irr)
             if motivos:
-                print(f"Aviso (línea {n}): se descarta {id} porque "
-                      + "; ".join(motivos) + ".")
+                _aviso(f"Aviso (línea {n}): se descarta {id} porque "
+                       + "; ".join(motivos) + ".")
                 continue
  
             if tam > TAM_USUARIO:
-                print(f"Aviso (línea {n}): se descarta {id} porque pide {tam}K y la "
-                      f"memoria de usuario es de {TAM_USUARIO}K: nunca podría entrar.")
+                _aviso(f"Aviso (línea {n}): se descarta {id} porque pide {tam}K y la "
+                       f"memoria de usuario es de {TAM_USUARIO}K: nunca podría entrar.")
                 continue
  
             linea_de_id[id] = n
