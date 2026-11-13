@@ -1,25 +1,10 @@
 """Punto de entrada del simulador: elige el lote CSV por nombre o con ventana"""
-import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
 from entrada import leer_procesos
 from planificador import Simulador
 from salida import mostrar_estado, mostrar_informe, set_sin_pausa
-
-
-class _Tee:
-    def __init__(self, consola, archivo):
-        self.consola = consola
-        self.archivo = archivo
-
-    def write(self, texto):
-        self.consola.write(texto)
-        self.archivo.write(texto)
-
-    def flush(self):
-        self.consola.flush()
-        self.archivo.flush()
 
 def seleccionar_lote():
     """Abre el explorador de archivos y devuelve la ruta (o '' si se cancela)."""
@@ -85,26 +70,7 @@ def ejecucion():
         print("El archivo no contiene procesos validos. No se ejecuto la Simulacion.")
         return
 
-    pausa = input("¿Mostrar cada evento con pausa? (s/n): ").strip().lower()
-    set_sin_pausa(pausa == "n")
-
-    guardar = input("¿Guardar la salida en un archivo? (s/n): ").strip().lower()
-    archivo_salida = None
-    if guardar == "s":
-        archivo_salida = input("Nombre del archivo de salida (ej. salida.txt): ").strip() or "salida.txt"
-
-    tee = None
-    if archivo_salida:
-        tee = _Tee(sys.stdout, open(archivo_salida, "w", encoding="utf-8"))
-        sys.stdout = tee
-
-    try:
-        sim = Simulador(procesos, al_evento=mostrar_estado)
-        sim.ejecutar()
-        mostrar_informe(sim)
-    finally:
-        if tee:
-            sys.stdout = tee.consola
-            tee.archivo.close()
-    if archivo_salida:
-        print(f"\nSalida guardada en {archivo_salida}")
+    set_sin_pausa(True)
+    sim = Simulador(procesos, al_evento=mostrar_estado)
+    sim.ejecutar()
+    mostrar_informe(sim)
