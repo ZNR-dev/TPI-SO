@@ -114,22 +114,31 @@ def mostrar_informe(sim):
     print("INFORME ESTADÍSTICO")
     print("=" * 60)
     filas = []
-    tot_ret = tot_esp = 0
+    tot_ret_orig = tot_ret_efec = 0
+    tot_esp_orig = tot_esp_efec = 0
     for p in sorted(sim.terminados, key=lambda p: p.id):
         base = p.arribo_efectivo if p.arribo_efectivo is not None else p.arribo
-        retorno = p.fin - base
-        espera = retorno - p.irr
-        tot_ret += retorno
-        tot_esp += espera
-        filas.append([p.id, p.arribo, p.irr, p.fin, retorno, espera])
+        ret_orig = p.fin - p.arribo
+        ret_efec = p.fin - base
+        esp_orig = ret_orig - p.irr
+        esp_efec = ret_efec - p.irr
+        tot_ret_orig += ret_orig
+        tot_ret_efec += ret_efec
+        tot_esp_orig += esp_orig
+        tot_esp_efec += esp_efec
+        filas.append([p.id, p.arribo, base, p.irr, p.fin,
+                      ret_orig, ret_efec, esp_orig, esp_efec])
     _tabla("Resultados por proceso",
-           ["Proceso", "Arribo", "Irrup.", "Fin", "Retorno", "Espera"], filas)
- 
+           ["Proceso", "Arribo", "Arribo ef.", "Irrup.", "Fin",
+            "Ret. orig.", "Ret. efec.", "Esp. orig.", "Esp. efec."], filas)
+
     n = len(sim.terminados)
-    print(f"\nRetorno promedio: {tot_ret / n:.2f}")
-    print(f"Espera promedio:  {tot_esp / n:.2f}")
+    print(f"\nRetorno promedio (original): {tot_ret_orig / n:.2f}")
+    print(f"Retorno promedio (efectivo): {tot_ret_efec / n:.2f}")
+    print(f"Espera promedio  (original): {tot_esp_orig / n:.2f}")
+    print(f"Espera promedio  (efectiva): {tot_esp_efec / n:.2f}")
     print(f"Rendimiento: {n} trabajos / {sim.t} u.t. = {n / sim.t:.3f} trabajos por unidad de tiempo")
- 
+
     prom_fe = sim.fe_suma / sim.fe_muestras if sim.fe_muestras else 0
     print("\nFragmentación externa (memoria libre no contigua):")
     print(f"  Máxima:   {sim.fe_max:>6}K (en t={sim.fe_max_t})")
