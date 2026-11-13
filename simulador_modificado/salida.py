@@ -40,8 +40,10 @@ def _tabla(titulo, encabezados, filas, vacia="(vacía)"):
  
  
 def _filas_procesos(procesos, restante=False):
-    """Filas PID | Arribo | Irrupción (o Restante) | Tamaño para una cola."""
-    return [[p.id, p.arribo, p.rest if restante else p.irr, f"{p.tam}K"]
+    """Filas PID | Arribo | Arribo efectivo | Irrupción (o Restante) | Tamaño para una cola."""
+    return [[p.id, p.arribo,
+             "-" if p.arribo_efectivo is None else p.arribo_efectivo,
+             p.rest if restante else p.irr, f"{p.tam}K"]
             for p in procesos]
  
  

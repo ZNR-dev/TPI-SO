@@ -41,6 +41,9 @@ class Simulador:
         """Los suspendidos tienen prioridad para entrar a memoria."""
         for p in list(self.susp):
             if self.mem.asignar(p):
+                if p.arribo_efectivo is None:
+                    p.arribo_efectivo = self.t
+                
                 self.susp.quitar(p)
                 p.estado = "Listo"
                 self.listos.agregar(p)
@@ -51,6 +54,7 @@ class Simulador:
         while not self.nuevos.vacia() and self.en_sistema() < MAX_EN_SISTEMA:
             p = self.nuevos.quitar_primero()
             if self.mem.asignar(p):
+                p.arribo_efectivo = self.t
                 p.estado = "Listo"
                 self.listos.agregar(p)
             else:

@@ -10,6 +10,7 @@ class Proceso:
         self.rest = irrupcion      # tiempo de CPU restante
         self.estado = "Nuevo"      # Nuevo, Listo, Listo y Suspendido, Ejecución, Terminado
         self.fin = None
+        self.arribo_efectivo = None
 
     def __str__(self):
         return f"{self.id}(rest={self.rest})"
