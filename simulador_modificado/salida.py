@@ -20,6 +20,10 @@ def _tabla(titulo, encabezados, filas, vacia="(vacía)"):
     Si no hay filas, muestra la tabla con una fila que dice `vacia`."""
     print(f"\n{titulo}:")
     filas = [[str(c) for c in fila] for fila in filas]
+    for f in filas:
+        if len(f) != len(encabezados):
+            raise ValueError(f"La tabla '{titulo}' tiene {len(encabezados)} "
+                             f"columnas pero una fila trae {len(f)}: {f}")
     anchos = [max([len(h)] + [len(f[i]) for f in filas])
               for i, h in enumerate(encabezados)]
     total = sum(anchos) + 3 * len(anchos) - 1       # ancho interior de toda la tabla
@@ -92,7 +96,7 @@ def mostrar_estado(sim):
 
     # La tabla de Nuevos va arriba de la memoria
     _tabla("Nuevos (esperando admisión)",
-           ["PID", "Arribo", "Irrupción", "Tamaño"],
+           ["PID", "Arribo", "Arribo ef.", "Irrupción", "Tamaño"],
            _filas_procesos(sim.nuevos))
 
     tam_procesos = {p.id: p.tam for p in sim.procesos}

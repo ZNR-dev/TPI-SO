@@ -155,10 +155,12 @@ class TestSRTF(unittest.TestCase):
 
 # ---------------------------------------------------------------- ENTRADA
 class TestLecturaCSV(unittest.TestCase):
-    def csv(self, filas):
+    ENCABEZADO = "id,arribo,tam,irrupcion"
+
+    def csv(self, filas, encabezado=None):
         f = tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False,
                                         encoding="utf-8", newline="")
-        f.write("id,arribo,tam,irrupcion\n" + "\n".join(filas) + "\n")
+        f.write((encabezado or self.ENCABEZADO) + "\n" + "\n".join(filas) + "\n")
         f.close()
         self.addCleanup(os.remove, f.name)
         return f.name
@@ -168,16 +170,35 @@ class TestLecturaCSV(unittest.TestCase):
         self.assertEqual([p.id for p in ps], ["P1", "P2"])
         self.assertEqual((ps[0].arribo, ps[0].tam, ps[0].irr), (0, 100, 5))
 
-    
+    def test_lee_encabezado_con_nombres_largos(self):
+        # Formato de prueba*.csv: Proceso, TA, TI, Tamaño (K).
+        # Ojo: la tercera columna es la irrupción y la cuarta el tamaño.
+        ps = leer_procesos(self.csv(["P1,3,2,120", "P2,10,4,130"],
+                                    encabezado="Proceso,TA,TI,Tamaño (K)"))
+        self.assertEqual([p.id for p in ps], ["P1", "P2"])
+        self.assertEqual((ps[0].arribo, ps[0].irr, ps[0].tam), (3, 2, 120))
+        self.assertEqual((ps[1].arribo, ps[1].irr, ps[1].tam), (10, 4, 130))
+
+    def test_lee_encabezado_con_punto_y_coma_final(self):
+        # Formato de LOTE2.csv: id,t_arribo,tam,t_irrupcion;
+        ps = leer_procesos(self.csv(["E1,0,52,18", "E2,1,58,4"],
+                                    encabezado="id,t_arribo,tam,t_irrupcion;"))
+        self.assertEqual((ps[0].arribo, ps[0].tam, ps[0].irr), (0, 52, 18))
+        self.assertEqual((ps[1].arribo, ps[1].tam, ps[1].irr), (1, 58, 4))
+
+    def test_encabezado_desconocido_usa_orden_por_posicion(self):
+        # Sin nombres reconocibles se asume id, arribo, tamaño, irrupción.
+        ps = leer_procesos(self.csv(["P1,0,100,5"], encabezado="a,b,c,d"))
+        self.assertEqual((ps[0].arribo, ps[0].tam, ps[0].irr), (0, 100, 5))
 
     def test_descarta_proceso_mas_grande_que_la_memoria(self):
         ps = self.leer_en_silencio(["P1,0,999,3", "P2,0,100,3"])
         self.assertEqual([p.id for p in ps], ["P2"])
 
-    def leer_en_silencio(self, filas):
+    def leer_en_silencio(self, filas, encabezado=None):
         """Lee el CSV sin mostrar los avisos en pantalla."""
         with contextlib.redirect_stdout(io.StringIO()):
-            return leer_procesos(self.csv(filas))
+            return leer_procesos(self.csv(filas, encabezado))
 
     def test_descarta_irrupcion_cero(self):
         ps = self.leer_en_silencio(["P1,0,100,0", "P2,0,50,3"])
