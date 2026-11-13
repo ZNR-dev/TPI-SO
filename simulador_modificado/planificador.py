@@ -57,6 +57,7 @@ class Simulador:
                 p.arribo_efectivo = self.t
                 p.estado = "Listo"
                 self.listos.agregar(p)
+                self.eventos.append(f"{p.id} pasa de nuevos a listo (entro en memoria)")
             else:
                 p.estado = "Listo y Suspendido"
                 self.susp.agregar(p)
