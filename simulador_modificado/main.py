@@ -70,7 +70,7 @@ def ejecucion():
         print("El archivo no contiene procesos validos. No se ejecuto la Simulacion.")
         return
 
-    set_sin_pausa(True)
+    set_sin_pausa(False)
     sim = Simulador(procesos, al_evento=mostrar_estado)
     sim.ejecutar()
     mostrar_informe(sim)
