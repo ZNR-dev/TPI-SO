@@ -1,103 +1,117 @@
-# TPI-SO
+# Simulador de gestión de memoria y planificación de procesos
 
-Simulador de gestión de memoria para sistemas operativos, desarrollado en Python. El proyecto modela la administración de memoria de un SO con particiones variables, planificación de procesos y métricas de rendimiento para analizar comportamiento bajo carga.
+Proyecto académico desarrollado en Python para estudiar la administración de memoria principal con particiones variables y la planificación de procesos en un sistema operativo. La implementación combina asignación de memoria **Best-Fit** con planificación de CPU **SRTF (Shortest Remaining Time First)** y permite observar, paso a paso, la admisión, suspensión, ejecución y finalización de un lote de procesos.
 
-El repositorio contiene una implementación educativa de un simulador orientado a la asignación de memoria y la planificación de CPU, con enfoque en políticas de memoria tipo Best-Fit y procesos con tiempos de arribo, tamaño y duración.
+> **Alcance de la implementación:** el algoritmo de asignación de memoria implementado es Best-Fit. First-Fit y Worst-Fit no están disponibles en la versión actual.
 
-## Descripción del proyecto
+## Objetivos académicos
 
-El sistema simula una pequeña memoria del sistema con las siguientes características:
+El simulador sirve como apoyo para analizar y relacionar los siguientes conceptos:
 
-- Zona fija reservada para el Sistema Operativo: 100K.
-- Zona de usuario disponible: 450K.
-- Granularidad de asignación: 10K.
-- Límite de procesos activos en el sistema: 5.
-- Carga de datos desde archivos CSV.
-- Planificación de CPU por SRTF (Shortest Remaining Time First).
-- Medición de tiempos de retorno, espera y fragmentación externa.
+- particiones variables y administración dinámica de memoria;
+- estrategias de selección de huecos libres;
+- fragmentación externa y coalescencia de particiones;
+- admisión, suspensión y reanudación de procesos;
+- planificación expropiativa de CPU;
+- tiempos de retorno, espera y rendimiento del sistema.
 
-La simulación permite observar cómo los procesos llegan, son admitidos en memoria, se ejecutan conforme a una política de menor tiempo restante, y cómo el sistema reacciona cuando hay falta de espacio o cuando se liberan bloques de memoria.
+## Modelo del sistema
 
-## Objetivo
+Los parámetros se definen en `simulador_modificado/config.py`:
 
-El objetivo principal es estudiar, visualizar y comprender:
+| Parámetro | Valor | Descripción |
+| --- | ---: | --- |
+| Memoria reservada para el SO | 100 K | Zona fija que no se asigna a procesos de usuario. |
+| Memoria de usuario | 450 K | Capacidad disponible para procesos. |
+| Granularidad de asignación | 10 K | Cada solicitud se redondea al siguiente múltiplo de 10 K. |
+| Máximo de procesos admitidos en el sistema | 5 | Cuenta los procesos en ejecución, listos y listos/suspendidos. |
+| Máximo de procesos válidos por lote | 10 | Las filas posteriores al límite se ignoran. |
 
-- cómo se asigna memoria a procesos en un sistema con particiones variables,
-- cómo se comporta la política Best-Fit,
-- cómo afecta la fragmentación externa a la admisión de procesos,
-- cómo la planificación SRTF impacta el tiempo de respuesta,
-- cómo medir la eficiencia del sistema a partir de métricas estadísticas.
+Las unidades `K` corresponden a las unidades empleadas por el modelo del proyecto; no se realiza conversión entre K, KB u otras unidades.
 
-## Características principales
+### Asignación y liberación de memoria
 
-- Simulación de memoria con lista enlazada de bloques.
-- Política de asignación Best-Fit.
-- Control de huecos libres y fusión de particiones contiguas.
-- Admitidos y suspendidos por falta de memoria.
-- Reanudación automática de procesos suspendidos cuando hay espacio disponible.
-- Soporte de lectura de lotes desde CSV con validación de datos.
-- Salida por consola con tablas informativas del estado del sistema.
-- Informe final con métricas acumuladas por proceso.
-- Pruebas automáticas unitarias.
+La memoria de usuario se representa mediante una lista enlazada cuyos bloques están ordenados por dirección. La política Best-Fit examina los huecos libres y selecciona el de menor tamaño que pueda satisfacer la solicitud. Si el hueco es mayor que la asignación requerida, se divide y el espacio restante se conserva como bloque libre.
+
+El tamaño solicitado se redondea hacia arriba a múltiplos de 10 K. Por ejemplo, un proceso que solicita 149 K ocupa 150 K. Al terminar el proceso, su bloque se libera; si los bloques contiguos anterior o siguiente también están libres, se fusionan.
+
+Si hay procesos esperando que no caben en ningún hueco individual, pero sí cabrían en la suma de los huecos libres no contiguos, el simulador registra fragmentación externa. La medida informada corresponde al total de memoria libre fragmentada cuando existe al menos un proceso suspendido afectado según ese criterio.
+
+### Planificación de CPU
+
+La CPU se planifica con SRTF, una variante expropiativa de SJF. En cada instante se selecciona entre los procesos listos el que tenga menor tiempo de CPU restante. Un proceso listo expropia al proceso en ejecución únicamente si su tiempo restante es **estrictamente menor**; en caso de igualdad, el actual conserva la CPU.
+
+Para ordenar los procesos listos se usa el criterio `(tiempo restante, instante de arribo, identificador)`, lo que establece desempates deterministas entre candidatos.
+
+### Ciclo de simulación
+
+En cada instante se realizan estas etapas, en orden:
+
+1. Se reciben los procesos cuyo instante de arribo ya se alcanzó.
+2. Se intenta reanudar procesos listos/suspendidos, que tienen prioridad sobre los nuevos.
+3. Se admiten procesos nuevos mientras haya capacidad según el límite del sistema; si no hay un hueco suficiente, quedan listos/suspendidos.
+4. Se selecciona o, cuando corresponde, se expropia el proceso de CPU.
+5. Se avanza una unidad de tiempo y se descuenta una unidad de CPU al proceso en ejecución.
+6. Si un proceso termina, se libera su memoria y se registra su finalización.
+7. Se muestrea la fragmentación externa.
 
 ## Estructura del repositorio
 
 ```text
 TPI-SO/
-├── simulador_modificado/
-│   ├── config.py            # constantes del sistema y memoria
-│   ├── entrada.py           # lectura y validación de CSV
-│   ├── interfaz.py          # menú principal del programa
-│   ├── lista.py             # estructura de lista enlazada usada por el simulador
-│   ├── main.py              # punto de entrada principal
-│   ├── memoria.py           # administración de la memoria y fragmentación
-│   ├── planificador.py      # ciclo de simulación y política de planificación
-│   ├── proceso.py           # modelo del proceso
-│   ├── salida.py            # tablas y reportes de salida
-│   ├── Test.py              # pruebas automáticas
-│   ├── *.csv                # lotes de prueba
-│   ├── interfaz.spec       # configuración de PyInstaller
-│   ├── interfaz.exe         # ejecutable generado
-│   ├── build/               # artefactos de compilación
-│   └── __pycache__/        # caché de Python
-└── README.md                # documentación del proyecto
+├── README.md
+└── simulador_modificado/
+    ├── config.py          # parámetros globales del modelo
+    ├── entrada.py         # lectura y validación de lotes CSV
+    ├── interfaz.py        # menú principal por consola
+    ├── lista.py           # estructura de lista enlazada
+    ├── main.py            # selección del lote y ejecución
+    ├── memoria.py         # asignación, liberación y fragmentación
+    ├── planificador.py    # ciclo de simulación y planificación SRTF
+    ├── proceso.py         # modelo y estado de cada proceso
+    ├── salida.py          # visualización de eventos e informe final
+    ├── Test.py            # pruebas unitarias
+    ├── prueba1.csv ... prueba6.csv
+    ├── interfaz.spec      # configuración de PyInstaller
+    └── interfaz.exe       # ejecutable incluido en el repositorio
 ```
 
-> Importante: el código principal se encuentra dentro de la carpeta `simulador_modificado/`.
+La carpeta también contiene artefactos generados (`build/` y `__pycache__/`). No son necesarios para ejecutar el proyecto desde el código fuente.
 
-## Modelo de memoria
+## Requisitos
 
-El simulador utiliza un modelo de memoria tipo MVT (Multiprogramming with Variable Tasks / particiones variables):
+- Python 3.10 o posterior recomendado.
+- Tkinter disponible para utilizar el selector gráfico de archivos. En algunas distribuciones de Linux puede requerir la instalación de un paquete del sistema independiente de Python.
+- No se requieren dependencias de terceros para ejecutar el simulador o sus pruebas.
 
-- La memoria total disponible para procesos de usuario es de 450K.
-- El SO ocupa 100K reservados.
-- El espacio asignado a cada proceso se redondea a múltiplos de 10K.
-- La memoria se representa como una lista enlazada ordenada por dirección.
-- Cuando un proceso termina, su bloque se libera y se fusiona con vecinos libres si es posible.
+## Instalación y ejecución
 
-### Política de asignación
+Clona el repositorio y entra en el directorio del programa:
 
-La implementación actual prioriza la estrategia Best-Fit:
+```bash
+git clone https://github.com/ZNR-dev/TPI-SO.git
+cd TPI-SO/simulador_modificado
+```
 
-- recorre todos los huecos libres,
-- elige el más pequeño que pueda alojar el proceso,
-- intenta minimizar el espacio sobrante.
+Inicia el menú principal:
 
-Esto provoca un comportamiento realista de fragmentación, especialmente cuando hay varios huecos de distinto tamaño.
+```bash
+python interfaz.py
+```
 
-## Planificación de procesos
+Desde el menú se puede iniciar una simulación, consultar los créditos o salir. Al iniciar, se ofrece seleccionar el archivo CSV escribiendo su ruta o mediante una ventana del explorador de archivos.
 
-El simulador usa una política de CPU basada en SRTF (Shortest Remaining Time First):
+También es posible ejecutar directamente el flujo de selección y simulación, sin el menú principal:
 
-- cada proceso tiene un tiempo restante de ejecución (`TIr`),
-- en cada instante, el proceso listo con menor tiempo restante obtiene la CPU,
-- si llega un proceso con menor tiempo restante, puede expropiar al actual.
+```bash
+python main.py
+```
 
-Esta política favorece tiempos de ejecución más cortos y es útil para estudiar la dinámica de procesos de corta duración.
+El programa muestra el estado del sistema en los eventos relevantes y solicita pulsar **Enter** para continuar entre estados. Al finalizar la ejecución, presenta el informe estadístico.
 
-## Formato de entrada CSV
+## Formato del lote CSV
 
-El lote de procesos se carga desde un archivo CSV. El parser acepta columnas con nombres en español o equivalentes, por ejemplo:
+El archivo debe ser CSV delimitado por comas. La primera fila se interpreta como encabezado; los nombres de campo se normalizan para ignorar mayúsculas, acentos, espacios y signos de puntuación. Un formato recomendado es:
 
 ```csv
 id,arribo,tam,irrupcion
@@ -106,135 +120,47 @@ P2,2,50,3
 P3,5,80,6
 ```
 
-También se aceptan variantes como:
+Los campos requeridos son:
 
-- `Proceso,TA,TI,Tamaño (K)`
-- `id,t_arribo,tam,t_irrupcion;`
+| Campo | Descripción | Restricción |
+| --- | --- | --- |
+| `id` | Identificador del proceso. | Obligatorio y único dentro del lote. |
+| `arribo` | Instante de llegada al sistema. | Entero no negativo. |
+| `tam` | Memoria solicitada en K. | Entero positivo; no puede superar los 450 K de memoria de usuario. |
+| `irrupcion` | Tiempo total de CPU requerido. | Entero positivo. |
 
-### Campos requeridos
+También se reconocen encabezados como `Proceso,TA,TI,Tamaño (K)` y `id,t_arribo,tam,t_irrupcion`. Cuando no se reconoce un encabezado completo, se utiliza el orden de columnas `id, arribo, tamaño, irrupción`.
 
-- `id`: identificador único del proceso.
-- `arribo`: instante de llegada al sistema.
-- `tam`: tamaño del proceso en KB.
-- `irrupcion`: tiempo de CPU requerido.
+Las filas vacías se ignoran. Las filas con datos faltantes, valores no enteros o fuera de rango, identificadores repetidos o solicitudes que exceden la memoria de usuario se descartan con un aviso. El programa procesa como máximo diez procesos válidos por lote.
 
-### Validaciones
+## Salida y métricas
 
-Se descartan automáticamente procesos con:
+Durante la simulación se muestran eventos, el proceso en CPU, la cola de nuevos, el mapa de particiones y las colas de listos y listos/suspendidos. La tabla de memoria incluye la zona reservada al SO y los bloques de usuario con sus direcciones.
 
-- identificador duplicado,
-- tamaño no positivo,
-- irrupción no positiva,
-- valores no numéricos,
-- tamaño mayor que la memoria disponible,
-- filas incompletas.
+El informe final presenta por proceso y en promedio:
 
-## Ejecución
+- **Retorno original:** instante de finalización menos instante de arribo.
+- **Retorno efectivo:** instante de finalización menos primer instante de entrada a memoria.
+- **Espera original:** retorno original menos tiempo de CPU requerido.
+- **Espera efectiva:** retorno efectivo menos tiempo de CPU requerido.
+- **Rendimiento:** cantidad de procesos terminados dividida por el tiempo total de simulación, expresada en trabajos por unidad de tiempo.
+- **Fragmentación externa máxima y promedio:** valores registrados durante los instantes de la simulación.
 
-### Opción 1: ejecutar desde la terminal
+El arribo efectivo permite distinguir el tiempo transcurrido desde la llegada al sistema del transcurrido desde la primera admisión en memoria. Las magnitudes temporales se expresan en unidades de tiempo del modelo.
 
-Desde la carpeta del proyecto:
+## Pruebas
 
-```bash
-cd simulador_modificado
-python main.py
-```
-
-### Opción 2: usar la interfaz del programa
+Desde el directorio `simulador_modificado/`, ejecuta:
 
 ```bash
-cd simulador_modificado
-python interfaz.py
-```
-
-### Opción 3: ejecutar pruebas unitarias
-
-```bash
-cd simulador_modificado
 python -m unittest Test -v
 ```
 
-## Flujo de ejecución
-
-Cuando se ejecuta el simulador:
-
-1. Se solicita seleccionar o ingresar un archivo CSV.
-2. El sistema lee la lista de procesos.
-3. Los procesos se van incorporando a la simulación por instantes de tiempo.
-4. El planificador decide qué proceso entra en CPU.
-5. Se actualiza la memoria y los estados.
-6. El sistema muestra el estado actual en cada evento importante.
-7. Al finalizar, genera un informe estadístico.
-
-## Salidas del simulador
-
-El programa imprime varias tablas por consola, por ejemplo:
-
-- procesos nuevos,
-- tabla de particiones,
-- estado de la memoria,
-- cola de listos,
-- cola de listos/suspendidos,
-- información final por proceso,
-- métricas de rendimiento.
-
-### Métricas reportadas
-
-- retorno original,
-- retorno efectivo,
-- espera original,
-- espera efectiva,
-- rendimiento promedio,
-- fragmentación externa máxima y promedio.
-
-Estas métricas permiten comparar el comportamiento del sistema cuando un proceso tarda más en entrar a memoria o cuando el espacio disponible está fragmentado.
-
-## Ejemplo de uso
-
-Supongamos un lote como este:
-
-```csv
-id,arribo,tam,irrupcion
-A,0,120,5
-B,1,80,3
-C,3,40,2
-D,4,90,4
-```
-
-Al ejecutarlo, el simulador:
-
-- valida cada proceso,
-- intenta asignarlos a memoria,
-- ordena ejecución según el tiempo restante,
-- informa cuándo un proceso entra a memoria y cuándo termina,
-- calcula métricas finales.
-
-## Dependencias
-
-El proyecto usa únicamente la biblioteca estándar de Python, en particular:
-
-- `csv`
-- `tkinter`
-- `unittest`
-- `os`
-- `textwrap`
-- `unicodedata`
-
-No requiere paquetes externos adicionales.
-
-## Estado del proyecto
-
-Este repositorio corresponde a un trabajo académico/práctico de sistema operativo orientado a la simulación de memoria y planificación. Está diseñado como herramienta didáctica para estudiar:
-
-- administración de memoria,
-- políticas de asignación,
-- fragmentación,
-- planificación de procesos,
-- análisis de rendimiento y tiempos.
+La suite incluye pruebas de la asignación Best-Fit, fusión de huecos libres, fragmentación externa, límite de procesos admitidos, suspensión y reanudación, planificación SRTF y validación de archivos CSV.
 
 ## Créditos
 
-El proyecto incluye la siguiente autoría en la interfaz de menú:
+Autores que aparecen en la interfaz del proyecto:
 
 - Benitez, Francisco Ezequiel
 - Cardozo, Lucas Tisiano
@@ -244,29 +170,10 @@ El proyecto incluye la siguiente autoría en la interfaz de menú:
 - Ramirez, Zahira Nahir
 - Sosa, Tomás
 
-## Licencia
+## Licencia y uso
 
-No se especifica una licencia en este repositorio. Si deseas reutilizar o distribuir el proyecto, conviene consultar primero con los autores o revisar si existe un archivo de licencia en el origen del repositorio.
+El repositorio no incluye actualmente un archivo de licencia. Por lo tanto, los permisos de reutilización, modificación y distribución no están especificados; antes de utilizar el código fuera de un contexto personal o académico, consulta con sus autores.
 
-## Recomendaciones
+## Posibles extensiones
 
-- Utiliza lotes CSV pequeños para observar el comportamiento paso a paso.
-- Experimenta cambiando el orden de llegada y tamaña de los procesos.
-- Compara resultados con distintos patrones de carga para analizar fragmentación.
-- Revisa el módulo `Test.py` para entender mejor las reglas del simulador y sus casos de prueba.
-
-## Conclusión
-
-Este proyecto ofrece una vista práctica y didáctica sobre cómo un sistema operativo gestiona la memoria y la CPU. Es especialmente útil para comprender conceptos de:
-
-- particiones variables,
-- fragmentación externa,
-- decisiones de asignación,
-- suspensiones por falta de memoria,
-- algoritmos de planificación.
-
-Si quieres ampliar este simulador, una siguiente mejora natural sería incluir otras políticas de colocación como First-Fit y Worst-Fit, además de más estadísticas y una interfaz gráfica más completa.
-
----
-
-Desarrollado como simulador académico de gestión de memoria en Python.
+Como trabajo futuro, el simulador podría ampliarse con implementaciones alternativas de First-Fit y Worst-Fit para comparar estrategias bajo los mismos lotes, además de ampliar la cobertura de pruebas o incorporar visualizaciones gráficas de la evolución de la memoria.
