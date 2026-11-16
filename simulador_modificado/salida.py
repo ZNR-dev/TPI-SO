@@ -10,6 +10,7 @@ _sin_pausa = False
 
 
 def set_sin_pausa(valor):
+    """Activa o desactiva la pausa con ENTER entre eventos."""
     global _sin_pausa
     _sin_pausa = valor
 
@@ -21,17 +22,21 @@ def _tabla(titulo, encabezados, filas, vacia="(vacía)"):
     print(f"\n{titulo}:")
     filas = [[str(c) for c in fila] for fila in filas]
     for f in filas:
+        # Falla temprano si una fila no coincide con la cantidad de encabezados.
         if len(f) != len(encabezados):
             raise ValueError(f"La tabla '{titulo}' tiene {len(encabezados)} "
                              f"columnas pero una fila trae {len(f)}: {f}")
+    # Ancho de cada columna = máximo entre su título y sus celdas.
     anchos = [max([len(h)] + [len(f[i]) for f in filas])
               for i, h in enumerate(encabezados)]
     total = sum(anchos) + 3 * len(anchos) - 1       # ancho interior de toda la tabla
 
     def borde(izq, med, der):
+        """Línea horizontal con los caracteres de unión indicados."""
         return izq + med.join("─" * (a + 2) for a in anchos) + der
 
     def fila(celdas):
+        """Fila con cada celda centrada en su columna."""
         return "│" + "│".join(f" {c:^{a}} " for c, a in zip(celdas, anchos)) + "│"
 
     print(borde("┌", "┬", "┐"))
@@ -42,6 +47,7 @@ def _tabla(titulo, encabezados, filas, vacia="(vacía)"):
             print(fila(f))
         print(borde("└", "┴", "┘"))
     else:
+        # Tabla vacía: una sola fila centrada que ocupa todo el ancho.
         print(borde("├", "┴", "┤"))
         print("│" + vacia.center(total) + "│")
         print("└" + "─" * total + "┘")
@@ -77,6 +83,7 @@ def _explicar_frag_externa(sim, bloques):
     _parrafo(f"Particiones libres separadas: {_unir([f'{h}K' for h in libres])} "
              f"(suman {total}K, pero la mayor es de {mayor}K).")
     _parrafo("No se pueden unir porque hay procesos ocupados entre ellas.")
+    # Procesos suspendidos que no entran en el hueco mayor pero sí en la suma.
     afectados = [f"{p.id} ({p.tam}K)" for p in sim.susp if mayor < p.tam <= total]
 
     if len(afectados) == 1:
@@ -87,6 +94,7 @@ def _explicar_frag_externa(sim, bloques):
 
 
 def mostrar_estado(sim):
+    """Imprime el estado completo del simulador en el instante actual."""
     print("\n" + "=" * ANCHO)
     print(f"Tiempo {sim.t}:")
     for evento in sim.eventos:
@@ -103,10 +111,13 @@ def mostrar_estado(sim):
     bloques = sim.mem.filas(tam_procesos)
     fe = sim.mem.fragmentacion_externa(sim.susp)
 
+    # La zona del SO se muestra como una fila fija; los bloques de usuario
+    # se expresan en direcciones absolutas sumando TAM_SO.
     filas_mem = [["SO", "0K", f"0-{TAM_SO - 1}K", f"{TAM_SO}K", "-", "-"]]
     for id, base, tam, proc, _ in bloques:
         ini = base + TAM_SO
         rango = f"{ini}-{ini + tam - 1}K"
+        # Solo se marca el tamaño de los huecos libres cuando hay FE.
         fe_txt = f"{tam}K" if (proc is None and fe > 0) else "-"
         filas_mem.append([id, f"{ini}K", rango, f"{tam}K", proc or "libre", fe_txt])
     _tabla("Tabla de particiones",
@@ -127,6 +138,7 @@ def mostrar_estado(sim):
 
 
 def mostrar_informe(sim):
+    """Imprime las tablas finales, los promedios y la fragmentación externa."""
     print("\n" + "=" * ANCHO)
     print("INFORME ESTADÍSTICO")
     print("=" * ANCHO)
@@ -135,10 +147,11 @@ def mostrar_informe(sim):
     tot_ret_orig = tot_ret_efec = 0
     tot_esp_orig = tot_esp_efec = 0
     for p in sorted(sim.terminados, key=lambda p: p.id):
+        # Si nunca entró a memoria, el arribo efectivo cae al arribo original.
         base = p.arribo_efectivo if p.arribo_efectivo is not None else p.arribo
-        ret_orig = p.fin - p.arribo
-        ret_efec = p.fin - base
-        esp_orig = ret_orig - p.irr
+        ret_orig = p.fin - p.arribo        # retorno = fin - llegada
+        ret_efec = p.fin - base            # retorno efectivo = fin - entrada a memoria
+        esp_orig = ret_orig - p.irr        # espera = retorno - tiempo de CPU
         esp_efec = ret_efec - p.irr
         tot_ret_orig += ret_orig
         tot_ret_efec += ret_efec
