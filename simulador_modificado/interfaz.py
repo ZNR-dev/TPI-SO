@@ -1,7 +1,9 @@
+"""Menú principal del simulador: iniciar, créditos o salir."""
 from main import ejecucion
 opc=0
 
 def asignar_valor():
+  """Pide un número por consola y repite si el usuario escribe otra cosa."""
   while True:
     try:
       return int(input())
@@ -10,6 +12,7 @@ def asignar_valor():
       opciones()
 
 def opciones():
+  """Muestra las opciones disponibles."""
   print("\n por favor, ingrese una de las opciones para continuar \n")
   print("1. Iniciar con el simulador")
   print("2. Créditos")
@@ -22,7 +25,7 @@ opc = asignar_valor()
 val=False
 while (val==False):
   if (opc==1):
-    ejecucion()
+    ejecucion()                    # selección de archivo + simulación
     print("\ndesea probar algo mas?")
     opciones()
     opc = asignar_valor()
@@ -41,16 +44,9 @@ while (val==False):
     opc = asignar_valor()
     
   elif (opc==3):
-    break
+    break                          # cierra el programa
 
   else:   
     print("opción no existe, por favor reintente con alguna de las opciones en pantalla\n")
     opciones()
     opc = asignar_valor()
-   
-    
-
-
-
-    
-
