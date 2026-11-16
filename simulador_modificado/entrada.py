@@ -16,6 +16,7 @@ ALIAS_COLUMNAS = {
     "irr": ("irrupcion", "tirrupcion", "ti", "tiempodeirrupcion"),
 }
 
+# Nombre legible de cada campo para los mensajes de error.
 NOMBRES = {"arribo": "arribo", "tam": "tamaño", "irr": "irrupción"}
 
 
@@ -32,7 +33,7 @@ def _mapa_columnas(encabezado):
     for i, celda in enumerate(encabezado):
         clave = _normalizar(celda)
         for campo, alias in ALIAS_COLUMNAS.items():
-            if clave in alias and campo not in mapa:
+            if clave in alias and campo not in mapa:   # el primer alias gana
                 mapa[campo] = i
                 break
     return mapa
@@ -50,12 +51,12 @@ def _leer_numeros(linea, mapa):
     valores, motivos = [], []
     for campo in ("arribo", "tam", "irr"):
         i = mapa[campo]
-        if i >= len(linea) or not linea[i].strip():
+        if i >= len(linea) or not linea[i].strip():    # celda vacía o faltante
             motivos.append(f"falta el valor de {NOMBRES[campo]}")
             continue
         try:
             valores.append(int(linea[i]))
-        except ValueError:
+        except ValueError:                             # texto que no es número
             motivos.append(f"{NOMBRES[campo]}='{linea[i].strip()}' no es un número entero")
     return valores, motivos
 
@@ -87,7 +88,7 @@ def leer_procesos(archivo):
     with open(archivo, "r", encoding="utf-8-sig", newline="") as f:
         lector = csv.reader(f)
         encabezado = next(lector, None)
-        if encabezado is None:
+        if encabezado is None:            # archivo vacío
             return procesos
 
         mapa = _mapa_columnas(encabezado)
@@ -95,7 +96,7 @@ def leer_procesos(archivo):
             mapa = {"id": 0, "arribo": 1, "tam": 2, "irr": 3}
 
         for n, linea in enumerate(lector, start=2):
-            if not any(c.strip() for c in linea):
+            if not any(c.strip() for c in linea):     # ignora líneas en blanco
                 continue
 
             if len(procesos) == MAX_PROCESOS:
@@ -111,7 +112,7 @@ def leer_procesos(archivo):
                 _aviso(f"Aviso (línea {n}): se descarta porque no tiene identificador.")
                 continue
 
-            if id in linea_de_id:
+            if id in linea_de_id:              # el id debe ser único en el lote
                 _aviso(f"Aviso (línea {n}): se descarta {id} porque ese ID ya apareció "
                        f"en la línea {linea_de_id[id]} y debe ser único.")
                 continue
@@ -129,7 +130,7 @@ def leer_procesos(archivo):
                        + "; ".join(motivos) + ".")
                 continue
 
-            if tam > TAM_USUARIO:
+            if tam > TAM_USUARIO:              # nunca podría entrar en memoria
                 _aviso(f"Aviso (línea {n}): se descarta {id} porque pide {tam}K y la "
                        f"memoria de usuario es de {TAM_USUARIO}K: nunca podría entrar.")
                 continue
