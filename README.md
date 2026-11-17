@@ -2,15 +2,13 @@
 
 Proyecto académico desarrollado en Python para estudiar la administración de memoria principal con particiones variables y la planificación de procesos en un sistema operativo. La implementación combina asignación de memoria **Best-Fit** con planificación de CPU **SRTF (Shortest Remaining Time First)** y permite observar, paso a paso, la admisión, suspensión, ejecución y finalización de un lote de procesos.
 
-> **Alcance de la implementación:** el algoritmo de asignación de memoria implementado es Best-Fit. First-Fit y Worst-Fit no están disponibles en la versión actual.
-
 ## Objetivos académicos
 
 El simulador sirve como apoyo para analizar y relacionar los siguientes conceptos:
 
 - particiones variables y administración dinámica de memoria;
 - estrategias de selección de huecos libres;
-- fragmentación externa y coalescencia de particiones;
+- fragmentación externa y unión de particiones;
 - admisión, suspensión y reanudación de procesos;
 - planificación expropiativa de CPU;
 - tiempos de retorno, espera y rendimiento del sistema.
@@ -170,9 +168,6 @@ Autores que aparecen en la interfaz del proyecto:
 - Ramirez, Zahira Nahir
 - Sosa, Tomás
 
-## Licencia y uso
-
-El repositorio no incluye actualmente un archivo de licencia. Por lo tanto, los permisos de reutilización, modificación y distribución no están especificados; antes de utilizar el código fuera de un contexto personal o académico, consulta con sus autores.
 
 ## Posibles extensiones
 
